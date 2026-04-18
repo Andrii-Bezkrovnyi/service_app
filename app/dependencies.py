@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from app.clients.github import GitHubClient
+from app.clients.github_client import GitHubClient
 from app.core.config import Settings, get_settings
 from app.services.github_service import GitHubService
 from app.storage.in_memory import InMemoryStorage
