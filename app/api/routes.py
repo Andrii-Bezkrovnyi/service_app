@@ -114,7 +114,7 @@ def create_storage_item(
     }
 
 
-@storage_router.patch(
+@storage_router.put(
     "/{key}",
     summary="Update existing storage item"
 )
