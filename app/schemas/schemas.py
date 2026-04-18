@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-
+from typing import List, Dict, Any
 
 class RepoSchema(BaseModel):
     id: int
@@ -7,14 +7,13 @@ class RepoSchema(BaseModel):
     full_name: str
     private: bool
 
-
 class RepoResponse(BaseModel):
     kind: str
-    query: dict
+    query: Dict[str, Any]
     response: RepoSchema
-
 
 class RepoListResponse(BaseModel):
     kind: str
-    query: dict
-    response: list[RepoSchema]
+    query: Dict[str, Any]
+    response: List[RepoSchema]
+

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, status
 from typing import Any, Union, List, Dict
 
 from app.dependencies import get_github_service, get_storage
-from app.schemas.schemas import RepoListResponse
+from app.schemas.schemas import RepoListResponse, RepoResponse
 from app.services.github_service import GitHubService
 from app.storage.in_memory import InMemoryStorage
 
@@ -30,23 +30,8 @@ def get_user(
 
 
 @github_router.get(
-    "/repos/{owner}/{repo}",
-    response_model=RepoListResponse,
-    summary="Get GitHub repository details"
-)
-def get_repo(
-    owner: str,
-    repo: str,
-    refresh: bool = False,
-    service: GitHubService = Depends(get_github_service),
-) -> Dict[str, Any]:
-    """Endpoint to fetch GitHub repository details. Supports optional cache refresh."""
-    return service.get_repo(owner=owner, repo=repo, refresh=refresh)
-
-
-@github_router.get(
     "/users/{username}/repos",
-    response_model=List[Dict[str, Any]],
+    response_model=RepoListResponse,
     summary="List user repositories"
 )
 def list_user_repos(
@@ -54,7 +39,7 @@ def list_user_repos(
     refresh: bool = False,
     per_page: int = 10,
     service: GitHubService = Depends(get_github_service),
-) -> List[Dict[str, Any]]:
+) -> Any:
     """
     Endpoint to list repositories of a GitHub user.
     Supports optional cache refresh and pagination.
@@ -64,6 +49,20 @@ def list_user_repos(
         refresh=refresh,
         per_page=per_page,
     )
+
+@github_router.get(
+    "/repos/{owner}/{repo}",
+    response_model=RepoResponse,
+    summary="Get GitHub repository details"
+)
+def get_repo(
+    owner: str,
+    repo: str,
+    refresh: bool = False,
+    service: GitHubService = Depends(get_github_service),
+) -> Any:
+    return service.get_repo(owner=owner, repo=repo, refresh=refresh)
+
 
 # --- Storage Endpoints ---
 @storage_router.get(

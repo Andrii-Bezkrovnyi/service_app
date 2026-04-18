@@ -19,6 +19,7 @@ class InMemoryStorage(StorageProtocol):
         self._items: dict[str, StorageEntry] = {}
 
     def create(self, key: str, value: StorageValue) -> None:
+        """Create a new storage item with the given key and value."""
         if key in self._items:
             raise StorageItemAlreadyExistsError(f"Storage item '{key}' already exists.")
 
@@ -30,6 +31,10 @@ class InMemoryStorage(StorageProtocol):
         )
 
     def read(self, key: str) -> StorageValue | None:
+        """
+        Read the value of a storage item by its key.
+         Returns None if key is not found.
+         """
         entry = self._items.get(key)
         if entry is None:
             return None
@@ -37,6 +42,7 @@ class InMemoryStorage(StorageProtocol):
         return entry.value
 
     def update(self, key: str, value: StorageValue) -> None:
+        """Update the value of an existing storage item by its key."""
         entry = self._items.get(key)
         if entry is None:
             raise StorageItemNotFoundError(f"Storage item '{key}' was not found.")
@@ -48,10 +54,12 @@ class InMemoryStorage(StorageProtocol):
         )
 
     def delete(self, key: str) -> None:
+        """Delete a storage item by its key."""
         if key not in self._items:
             raise StorageItemNotFoundError(f"Storage item '{key}' was not found.")
 
         del self._items[key]
 
     def list_keys(self) -> list[str]:
+        """List all keys currently stored."""
         return list(self._items.keys())
