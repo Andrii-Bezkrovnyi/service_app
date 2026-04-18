@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from typing import Any, Dict, List, Union
+
 from fastapi import APIRouter, Body, Depends, status
-from typing import Any, Union, List, Dict
 
 from app.dependencies import get_github_service, get_storage
-from app.schemas.schemas import RepoListResponse, RepoResponse
+from app.schemas.repo_schemas import RepoListResponse, RepoResponse
 from app.services.github_service import GitHubService
 from app.storage.in_memory import InMemoryStorage
 
@@ -13,6 +14,7 @@ StoragePayload = Dict[str, Any]
 
 github_router = APIRouter(prefix="/github", tags=["GitHub"])
 storage_router = APIRouter(prefix="/storage", tags=["Storage"])
+
 
 # --- GitHub Endpoints ---
 @github_router.get(
@@ -50,6 +52,7 @@ def list_user_repos(
         per_page=per_page,
     )
 
+
 @github_router.get(
     "/repos/{owner}/{repo}",
     response_model=RepoResponse,
@@ -80,14 +83,14 @@ def list_storage_keys(
 @storage_router.get(
     "/{key}",
     summary="Read item from storage",
-    response_description="The stored value associated with the key"
+    response_description="The stored storage_value associated with the key"
 )
 def read_storage_item(
     key: str,
     storage: InMemoryStorage = Depends(get_storage),
 ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """
-    Endpoint to read a value from storage by its key.
+    Endpoint to read a storage_value from storage by its key.
     Raises 404 if key is not found.
     """
     value = storage.read(key)
@@ -110,7 +113,7 @@ def create_storage_item(
     storage.create(key, value)
     return {
         "key": key,
-        "value": value,
+        "storage_value": value,
     }
 
 
@@ -127,7 +130,7 @@ def update_storage_item(
     storage.update(key, value)
     return {
         "key": key,
-        "value": value,
+        "storage_value": value,
     }
 
 
