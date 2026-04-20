@@ -20,15 +20,16 @@ GitHubList: TypeAlias = list[GitHubObject]
 
 class GitHubClient:
     def __init__(
-        self,
-        settings: Settings,
-        transport: httpx.BaseTransport | None = None,
+            self,
+            settings: Settings,
+            transport: httpx.BaseTransport | None = None,
     ) -> None:
         headers = {
             "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
+            "X-GitHub-Api-Version": "2026-03-10",
         }
-        if settings.github_token is not None and settings.github_token != "":
+
+        if settings.github_token:
             headers["Authorization"] = f"Bearer {settings.github_token}"
 
         self._client = httpx.Client(
@@ -43,57 +44,63 @@ class GitHubClient:
 
     def get_user(self, username: str) -> GitHubObject:
         response = self._request("GET", f"/users/{username}")
-        return self._ensure_object(response)
+        return cast(GitHubObject, self._parse_json(response, dict))
 
     def get_repo(self, owner: str, repo: str) -> GitHubObject:
         response = self._request("GET", f"/repos/{owner}/{repo}")
-        return self._ensure_object(response)
+        return cast(GitHubObject, self._parse_json(response, dict))
 
     def list_user_repos(self, username: str, per_page: int = 10) -> GitHubList:
-        params = {
-            "per_page": per_page,
-        }
-        response = self._request("GET", f"/users/{username}/repos", params=params)
-        return self._ensure_list(response)
+        response = self._request(
+            "GET",
+            f"/users/{username}/repos",
+            req_params={"per_page": per_page},
+        )
+        return cast(GitHubList, self._parse_json(response, list))
 
     def _request(
-        self,
-        method: str,
-        path: str,
-        params: Mapping[str, object] | None = None,
+            self,
+            method: str,
+            path: str,
+            req_params: Mapping[str, object] | None = None,
     ) -> httpx.Response:
-        response = self._client.request(method, path, params=params)
+        response = self._client.request(method, path, params=req_params)
+        status = response.status_code
 
-        if response.status_code == HTTPStatus.NOT_FOUND:
-            raise GitHubResourceNotFoundError(f"GitHub resource '{path}' was not found.")
+        if status == HTTPStatus.NOT_FOUND:
+            raise GitHubResourceNotFoundError(
+                f"GitHub resource '{path}' was not found.",
+            )
 
-        if response.status_code == HTTPStatus.FORBIDDEN:
-            if response.headers.get("X-RateLimit-Remaining") == "0":
-                raise GitHubRateLimitError("GitHub API rate limit was exceeded.")
-            raise GitHubAPIError(f"GitHub API returned 403 for '{path}'.")
-
-        if response.status_code >= HTTPStatus.BAD_REQUEST:
+        if status >= HTTPStatus.FORBIDDEN:
+            if status == HTTPStatus.FORBIDDEN:
+                if response.headers.get("X-RateLimit-Remaining") == "0":
+                    raise GitHubRateLimitError(
+                        "GitHub API rate limit was exceeded.",
+                    )
             raise GitHubAPIError(
-                f"GitHub API returned HTTP {response.status_code} for '{path}'.",
+                f"GitHub API error {status} for '{path}'.",
             )
 
         return response
 
-    def _ensure_object(self, response: httpx.Response) -> GitHubObject:
-        data = response.json()
-        if not isinstance(data, dict):
-            raise GitHubUnexpectedResponseError("Expected a JSON object from GitHub.")
-        return cast(GitHubObject, data)
+    def _parse_json(
+            self,
+            response: httpx.Response,
+            expected_type: type,
+    ) -> GitHubObject | GitHubList:
+        json_payload = response.json()
 
-    def _ensure_list(self, response: httpx.Response) -> GitHubList:
-        data = response.json()
-        if not isinstance(data, list):
-            raise GitHubUnexpectedResponseError("Expected a JSON list from GitHub.")
+        if not isinstance(json_payload, expected_type):
+            raise GitHubUnexpectedResponseError(
+                f"Expected {expected_type.__name__} from GitHub.",
+            )
 
-        result: GitHubList = []
-        for item in data:
-            if not isinstance(item, dict):
-                raise GitHubUnexpectedResponseError("Expected a list of JSON objects from GitHub.")
-            result.append(cast(GitHubObject, item))
+        if expected_type is list:
+            for repo_item in json_payload:
+                if not isinstance(repo_item, dict):
+                    raise GitHubUnexpectedResponseError(
+                        "Expected a list of JSON objects from GitHub.",
+                    )
 
-        return result
+        return cast(GitHubObject | GitHubList, json_payload)
