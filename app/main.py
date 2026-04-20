@@ -95,4 +95,6 @@ if __name__ == "__main__":
         host=LOCAL_HOST,
         port=DEFAULT_PORT,
         reload=True,
+        log_level="info",
+        access_log=True,
     )
