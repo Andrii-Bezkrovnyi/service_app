@@ -7,7 +7,8 @@ import uvicorn
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from app.api.routes import github_router, storage_router
+from app.api.github_routes import github_router
+from app.api.storage_routes import storage_router
 from app.core.exceptions import (
     ApplicationError,
     GitHubAPIError,
