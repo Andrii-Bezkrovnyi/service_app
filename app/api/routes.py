@@ -6,8 +6,8 @@ from fastapi import APIRouter, Body, Depends, status
 
 from app.dependencies import get_github_service, get_storage
 from app.schemas.repo_schemas import RepoListResponse, RepoResponse
-from app.services.github_service import GitHubService
-from app.storage.in_memory import InMemoryStorage
+from app.services.github_service import GitHubService  # noqa: WPS404
+from app.storage.in_memory import InMemoryStorage  # noqa: WPS404
 
 # Typing alias for storage payloads, which can be any JSON-serializable structure
 StoragePayload = Dict[str, Any]
@@ -85,18 +85,18 @@ def list_storage_keys(
     summary="Read item from storage",
     response_description="The stored storage_value associated with the key"
 )
-def read_storage_item(
+def read_storage(
     key: str,
-    storage: InMemoryStorage = Depends(get_storage),
+    storage_item: InMemoryStorage = Depends(get_storage),
 ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """
     Endpoint to read a storage_value from storage by its key.
     Raises 404 if key is not found.
     """
-    value = storage.read(key)
-    if value is None:
+    stored_item = storage_item.read(key)
+    if stored_item is None:
         raise KeyError(f"Storage item '{key}' was not found.")
-    return value
+    return stored_item
 
 
 @storage_router.post(
@@ -104,16 +104,16 @@ def read_storage_item(
     status_code=status.HTTP_201_CREATED,
     summary="Create new storage item"
 )
-def create_storage_item(
+def create_storage(
     key: str,
-    value: StoragePayload = Body(...),
+    storage_item: StoragePayload = Body(...),
     storage: InMemoryStorage = Depends(get_storage),
 ) -> Dict[str, Any]:
     """Endpoint to create a new storage item. Raises 400 if key already exists."""
-    storage.create(key, value)
+    storage.create(key, storage_item)
     return {
         "key": key,
-        "storage_value": value,
+        "storage_value": storage_item,
     }
 
 
@@ -121,16 +121,16 @@ def create_storage_item(
     "/{key}",
     summary="Update existing storage item"
 )
-def update_storage_item(
+def update_storage(
     key: str,
-    value: StoragePayload = Body(...),
+    storage_item: StoragePayload = Body(...),
     storage: InMemoryStorage = Depends(get_storage),
 ) -> Dict[str, Any]:
     """Endpoint to update an existing storage item. Raises 404 if key is not found."""
-    storage.update(key, value)
+    storage.update(key, storage_item)
     return {
         "key": key,
-        "storage_value": value,
+        "storage_value": storage_item,
     }
 
 
@@ -138,10 +138,10 @@ def update_storage_item(
     "/{key}",
     summary="Delete item from storage"
 )
-def delete_storage_item(
+def delete_storage(
     key: str,
-    storage: InMemoryStorage = Depends(get_storage),
+    storage_item: InMemoryStorage = Depends(get_storage),
 ) -> Dict[str, str]:
     """Endpoint to delete a storage item by its key. Raises 404 if key is not found."""
-    storage.delete(key)
+    storage_item.delete(key)
     return {"deleted": key}
