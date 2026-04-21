@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from http import HTTPStatus
-from typing import TypeAlias, cast
+from typing import TypeAlias, Sequence
 
 import httpx
 
@@ -10,12 +9,16 @@ from app.core.config import Settings
 from app.core.exceptions import (
     GitHubAPIError,
     GitHubRateLimitError,
-    GitHubResourceNotFoundError,
-    GitHubUnexpectedResponseError,
+    GitHubResourceNotFoundError
 )
+from app.core.json_utils import parse_dict, parse_list
+from app.core.types import GitHubList, GitHubObject
 
-GitHubObject: TypeAlias = dict[str, object]
-GitHubList: TypeAlias = list[GitHubObject]
+ScalarQueryValue: TypeAlias = str | int | float | bool | None
+SequenceQueryValue: TypeAlias = Sequence[ScalarQueryValue]
+
+QueryParamValue: TypeAlias = ScalarQueryValue | SequenceQueryValue
+QueryParams: TypeAlias = dict[str, QueryParamValue]
 
 
 class GitHubClient:
@@ -44,11 +47,11 @@ class GitHubClient:
 
     def get_user(self, username: str) -> GitHubObject:
         response = self._request("GET", f"/users/{username}")
-        return cast(GitHubObject, self._parse_json(response, dict))
+        return parse_dict(response)
 
     def get_repo(self, owner: str, repo: str) -> GitHubObject:
         response = self._request("GET", f"/repos/{owner}/{repo}")
-        return cast(GitHubObject, self._parse_json(response, dict))
+        return parse_dict(response)
 
     def list_user_repos(self, username: str, per_page: int = 10) -> GitHubList:
         response = self._request(
@@ -56,13 +59,13 @@ class GitHubClient:
             f"/users/{username}/repos",
             req_params={"per_page": per_page},
         )
-        return cast(GitHubList, self._parse_json(response, list))
+        return parse_list(response)
 
     def _request(
             self,
             method: str,
             path: str,
-            req_params: Mapping[str, object] | None = None,
+            req_params: QueryParams | None = None,
     ) -> httpx.Response:
         response = self._client.request(method, path, params=req_params)
         status = response.status_code
@@ -83,24 +86,3 @@ class GitHubClient:
             )
 
         return response
-
-    def _parse_json(
-            self,
-            response: httpx.Response,
-            expected_type: type,
-    ) -> GitHubObject | GitHubList:
-        json_payload = response.json()
-
-        if not isinstance(json_payload, expected_type):
-            raise GitHubUnexpectedResponseError(
-                f"Expected {expected_type.__name__} from GitHub.",
-            )
-
-        if expected_type is list:
-            for repo_item in json_payload:
-                if not isinstance(repo_item, dict):
-                    raise GitHubUnexpectedResponseError(
-                        "Expected a list of JSON objects from GitHub.",
-                    )
-
-        return cast(GitHubObject | GitHubList, json_payload)

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.clients.github_client import GitHubClient, GitHubList, GitHubObject
+from app.clients.github_client import GitHubClient
 from app.core.config import Settings
+from app.core.types import GitHubList, GitHubObject
 from app.services.github_service import GitHubService
 from app.storage.in_memory import InMemoryStorage
 
