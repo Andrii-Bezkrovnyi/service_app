@@ -4,13 +4,14 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
+from fastapi import Request, status
+from fastapi.responses import JSONResponse, Response
 
 from app.api.github_routes import github_router
 from app.api.storage_routes import storage_router
+from app.core.exceptions import ApplicationError
 from app.core.exceptions import (
-    ApplicationError,
     GitHubAPIError,
     GitHubRateLimitError,
     GitHubResourceNotFoundError,
@@ -20,7 +21,6 @@ from app.core.exceptions import (
 )
 from app.dependencies import close_cached_client
 
-# Constants to avoid magic numbers (WPS432)
 DEFAULT_PORT = 8000
 LOCAL_HOST = "127.0.0.1"
 
@@ -32,16 +32,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     close_cached_client()
 
 
-def _handle_application_error(request: Request, exc: ApplicationError) -> JSONResponse:
+def _handle_application_error(request: Request, exc: Exception) -> Response:
     """Handle custom application errors."""
+    assert isinstance(exc, ApplicationError)
+
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.message},
     )
 
 
-def _handle_key_error(request: Request, exc: KeyError) -> JSONResponse:
+def _handle_key_error(request: Request, exc: Exception) -> Response:
     """Handle standard KeyError by mapping it to 404 Not Found."""
+    assert isinstance(exc, KeyError)
+
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={"detail": str(exc).strip("'")},
