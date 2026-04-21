@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast, Mapping
+from typing import Mapping, cast
 
 from app.clients.github_client import GitHubClient
-from app.core.types import GitHubObject, GitHubList
+from app.core.types import GitHubList, GitHubObject
 # from app.clients.github_client import GitHubClient, GitHubList, GitHubObject
 from app.storage.base import StorageProtocol, StorageValue
 

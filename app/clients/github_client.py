@@ -1,16 +1,12 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import TypeAlias, Sequence
+from typing import Sequence, TypeAlias
 
 import httpx
 
 from app.core.config import Settings
-from app.core.exceptions import (
-    GitHubAPIError,
-    GitHubRateLimitError,
-    GitHubResourceNotFoundError
-)
+from app.core.exceptions import GitHubAPIError, GitHubRateLimitError, GitHubResourceNotFoundError
 from app.core.json_utils import parse_dict, parse_list
 from app.core.types import GitHubList, GitHubObject
 
