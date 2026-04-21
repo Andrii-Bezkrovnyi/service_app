@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import cast
+from typing import cast, Mapping
 
-from app.clients.github_client import GitHubClient, GitHubList, GitHubObject
+from app.clients.github_client import GitHubClient
+from app.core.types import GitHubObject, GitHubList
+# from app.clients.github_client import GitHubClient, GitHubList, GitHubObject
 from app.storage.base import StorageProtocol, StorageValue
 
 
@@ -15,7 +17,7 @@ def build_storage_key(prefix: str, *parts: str) -> str:
 
 def build_storage_record(
         kind: str,
-        query: dict[str, object],
+        query: Mapping[str, object],
         response: StorageValue,
 ) -> dict[str, object]:
     """Structure the data for saving in the sandbox storage."""
@@ -98,7 +100,7 @@ class GitHubService:
             self,
             key: str,
             kind: str,
-            query: dict[str, object],
+            query: Mapping[str, object],
             fetcher: Callable[[], StorageValue],
             refresh: bool,
     ) -> StorageValue:
