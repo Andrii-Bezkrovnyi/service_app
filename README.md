@@ -90,11 +90,6 @@ to access the interactive API documentation in Swagger UI.
 }
 ```
 
-
-
-
-
-
 ## Architecture of the project
     service_app/
     ├── app/
