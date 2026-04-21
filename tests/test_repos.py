@@ -1,4 +1,7 @@
-def test_service_can_refresh_repo(service) -> None:
+from typing import Any
+
+
+def test_service_can_refresh_repo(service: Any) -> None:
     svc, client, _ = service
 
     svc.get_repo("octo", "hello")
@@ -7,7 +10,7 @@ def test_service_can_refresh_repo(service) -> None:
     assert client.repo_calls == 2
 
 
-def test_service_caches_repo(service) -> None:
+def test_service_caches_repo(service: Any) -> None:
     svc, client, _ = service
 
     svc.get_repo("octo", "hello")
@@ -16,7 +19,7 @@ def test_service_caches_repo(service) -> None:
     assert client.repo_calls == 1
 
 
-def test_service_lists_repos(service) -> None:
+def test_service_lists_repos(service: Any) -> None:
     svc, client, _ = service
 
     repos_record = svc.list_user_repos("octocat")
@@ -27,7 +30,7 @@ def test_service_lists_repos(service) -> None:
     assert client.repos_calls == 1
 
 
-def test_service_caches_repos(service) -> None:
+def test_service_caches_repos(service: Any) -> None:
     svc, client, _ = service
 
     svc.list_user_repos("octocat")

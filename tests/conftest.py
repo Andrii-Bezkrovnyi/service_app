@@ -46,7 +46,7 @@ class FakeGitHubClient(GitHubClient):
 
 
 @pytest.fixture
-def service():
+def service() -> tuple[GitHubService, FakeGitHubClient, InMemoryStorage]:
     client = FakeGitHubClient()
     storage = InMemoryStorage()
     service = GitHubService(client=client, storage=storage)
